@@ -16,6 +16,12 @@ import LSC_Client
 
 stream = None
 bytes = ''
+
+ip_port_sonar = ('127.0.0.1', 9030)
+sock_sonar = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
+sock_sonar.connect(ip_port_sonar)  #连接到超声波距离服务器以获取距离
+
+distance = 0.0
 Running = False
 
 step = 0
@@ -29,7 +35,31 @@ xc = False
 
 lsc = LSC_Client.LSC_Client()
 
+##从服务器接收超声波距离的数据
+def updateDistance():
+    global sock_sonar
+    global distance
 
+    while True:
+        rcv = sock_sonar.recv(1024)
+        if rcv == b'':
+            distance = 0.0
+            break;
+        else:
+            if Running is True:
+                st =  rcv.strip() #去除空格
+                try:
+                    distance = float(st)  #将字符串转为浮点数
+                except Exception as e:
+                    print(e)
+                    distance = 0.0
+
+#启动距离更新线程
+th1 = threading.Thread(target=updateDistance)
+th1.setDaemon(True)
+th1.start()
+
+                    
 # 暂停信号的回调
 def Stop(signum, frame):
     global Running
@@ -86,7 +116,7 @@ def getAreaMaxContour(contours):
 
 def logic():
     global step
-    global Dist
+    global distance
     global lsc
     global xc
     global centerX
@@ -108,10 +138,10 @@ def logic():
                         step = 1  # 转到步骤1
                         pass
                 elif step == 1:
-                    if Dist > 30:  # 检查距离是不是在 30 到 20之间，根据情况做对应操作
+                    if distance > 30:  # 检查距离是不是在 30 到 20之间，根据情况做对应操作
                         lsc.RunActionGroup(1, 1)  # 大于30 就前进，去靠近目标
                         lsc.WaitForFinish(3000)  # 等待动作执行完
-                    elif Dist < 30 and Dist > 0:
+                    elif distance < 30 and distance > 0:
                         lsc.StopActionGroup() #停止正在执行的动作组
                         # lsc.RunActionGroup(2, 1)  # 小于20就后退，去远离目标
                         lsc.RunActionGroup(4,11)  #运行4号动作在，低姿态右转动作执行16次
@@ -125,9 +155,9 @@ def logic():
 
 
 # 启动跟随控制六足动作的线程
-th1 = threading.Thread(target=logic)
-th1.setDaemon(True)
-th1.start()
+th2 = threading.Thread(target=logic)
+th2.setDaemon(True)
+th2.start()
 
 pitch = 1500
 yaw = 1500
