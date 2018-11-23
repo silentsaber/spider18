@@ -102,8 +102,13 @@ while True:
         v = cv2.equalizeHist(v)
         frame = cv2.merge((h,s,v))
 
+<<<<<<< HEAD
         frame = cv2.inRange(frame, (70,100,75), (85, 255, 255)) #根据hsv值对图片进行二值化     对图片的二值化
         frame = cv2.morphologyEx(frame, cv2.MORPH_CLOSE, (3,3))       ################开运算滤波
+=======
+        frame = cv2.inRange(frame, (70,100,75), (85, 255, 255)) #根据hsv值对图片进行二值化 
+        frame = cv2.morphologyEx(frame, cv2.MORPH_CLOSE, (3,3))
+>>>>>>> 66c3fd01c0065b2492d082dfd4c4a8e3e4eb7f03
         (contours, hierarchy) = cv2.findContours(frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE,(0,0)) #找出所有外轮廓
         areaMaxContour = getAreaMaxContour(contours) #找到最大的轮廓
         centerX = 0
