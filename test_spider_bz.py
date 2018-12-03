@@ -14,7 +14,7 @@ sock_sonar.connect(ip_port_sonar)  #连接到超声波距离服务器以获取�
 
 distance = 0.0
 step = 0
-Running = False
+Running = True
 
 lsc = LSC_Client()
 
@@ -33,9 +33,11 @@ def updateDistance():
                 st =  rcv.strip() #去除空格
                 try:
                     distance = float(st)  #将字符串转为浮点数
+                    print(distance)
                 except Exception as e:
                     print(e)
                     distance = 0.0
+                    print(distance)
 
 #启动距离更新线程
 th1 = threading.Thread(target=updateDistance)
@@ -69,45 +71,53 @@ signal.signal(signal.SIGTSTP, Stop)
 signal.signal(signal.SIGCONT, Continue)
 
 
-#心跳，
-def Heartbeat():
-    while True:
-        time.sleep(3)
-        try:
-            sock_sonar.sendall("3")
-        except:
-            continue
-
-#启动心跳线程
-th2 = threading.Thread(target=Heartbeat)
-th2.setDaemon(True)
-th2.start()
+###心跳，
+##def Heartbeat():
+##    while True:
+##        time.sleep(3)
+##        try:
+##            sock_sonar.sendall("3")
+##        except:
+##            continue
+##
+###启动心跳线程
+##th2 = threading.Thread(target=Heartbeat)
+##th2.setDaemon(True)
+##th2.start()
 
 
 lsc.RunActionGroup(0,1)
 
+time_start = time.time()
+
 while True:
   if Running is True:
-    try:
-        if step == 0:
-            lsc.RunActionGroup(1,0)  #动作组1, 低姿态前进
-            step = 1 #转到步骤1
-        elif step == 1:
-            if distance > 0 and distance <= 50:  # 超声波距离小于50CM
-                lsc.StopActionGroup() #停止正在执行的动作组
-                step = 2 #转到步骤2
-        elif step == 2:
-            lsc.RunActionGroup(4,11)  #运行4号动作在，低姿态右转动作执行16次
-            lsc.WaitForFinish(20000)  #等待执行完毕
-            step = 3 #转到步骤3
-        elif step == 3: 
-            step = 0 #回到步骤0
-        else:
-            pass
-        time.sleep(0.1)
-    except Exception as e:
-        print(e)
+    time_elapsed = time.time() - time_start
+    if time_elapsed > 5:
+        print(time_elapsed)
+        Running = False
         break
+    else:
+        try:
+            if step == 0:
+                lsc.RunActionGroup(1,0)  #动作组1, 低姿态前进
+                step = 1 #转到步骤1
+            elif step == 1:
+                if distance > 0 and distance <= 30:  # 超声波距离小于30CM
+                    lsc.StopActionGroup() #停止正在执行的动作组
+                    step = 2 #转到步骤2
+            elif step == 2:
+                lsc.RunActionGroup(4,11)  #运行4号动作在，低姿态右转动作执行16次
+                lsc.WaitForFinish(20000)  #等待执行完毕
+                step = 3 #转到步骤3
+            elif step == 3: 
+                step = 0 #回到步骤0
+            else:
+                pass
+            time.sleep(0.1)
+        except Exception as e:
+            print(e)
+            break
   else: #Running 是False, 程序被暂停，什么都不做
       time.sleep(0.1)
 

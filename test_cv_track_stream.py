@@ -17,10 +17,11 @@ import LSC_Client
 
 stream = None
 bytes = ''
-Running = False
+Running = True
 radius = 0
 
 lsc = LSC_Client.LSC_Client()
+stream = urllib.urlopen("http://127.0.0.1:8080/?action=stream?dummy=param.mjpg")
 
 #暂停信号的回调
 def Stop(signum, frame):

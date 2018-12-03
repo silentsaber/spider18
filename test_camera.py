@@ -23,7 +23,7 @@ sock_sonar = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock_sonar.connect(ip_port_sonar)  #连接到超声波距离服务器以获取距离
 
 distance = 0.0
-Running = False
+Running = True
 
 step = 0
 Dist = 0.0
@@ -51,9 +51,11 @@ def updateDistance():
                 st =  rcv.strip() #去除空格
                 try:
                     distance = float(st)  #将字符串转为浮点数
+                    print(distance)
                 except Exception as e:
                     print(e)
                     distance = 0.0
+                    print(distance)
 
 #启动距离更新线程
 th1 = threading.Thread(target=updateDistance)
@@ -139,10 +141,10 @@ def logic():
                         step = 1  # 转到步骤1
                         pass
                 elif step == 1:
-                    if distance > 30:  # 检查距离是不是在 30 到 20之间，根据情况做对应操作
-                        lsc.RunActionGroup(1, 1)  # 大于30 就前进，去靠近目标
+                    if distance > 50:  # 检查距离是不是在 50 到 20之间，根据情况做对应操作
+                        lsc.RunActionGroup(1, 1)  # 大于50 就前进，去靠近目标
                         lsc.WaitForFinish(3000)  # 等待动作执行完
-                    elif distance < 30 and distance > 0:
+                    elif distance < 50 and distance > 0:
                         lsc.StopActionGroup() #停止正在执行的动作组
                         # lsc.RunActionGroup(2, 1)  # 小于20就后退，去远离目标
                         lsc.RunActionGroup(4,11)  #运行4号动作在，低姿态右转动作执行16次
@@ -167,6 +169,7 @@ lsc.MoveServo(7, 1500, 1000)
 
 while True:
     if Running is True:
+##        pass
         orgFrame = None
         try:
             bytes += stream.read(4096)  # 接收数据v
@@ -184,85 +187,85 @@ while True:
             print(e)
             continue
 
-        if orgFrame is not None:
-            height, width = orgFrame.shape[:2]
-            frame = orgFrame
-            frame = cv2.GaussianBlur(frame, (5, 5), 0);  # 高斯模糊
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV);  # 将图片转换到HSV空间
-
-            # 分离出各个HSV通道
-            h, s, v = cv2.split(frame)
-            v = cv2.equalizeHist(v)
-            frame = cv2.merge((h, s, v))
-
-            frame = cv2.inRange(frame, (0,0,221), (180,30,255))  # 根据目标的颜色对图片进行二值化
-            frame = cv2.morphologyEx(frame, cv2.MORPH_CLOSE, (4, 4))  # 闭操作
-            (contours, hierarchy) = cv2.findContours(frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE, (0, 0))  # 找到所有的轮廓
-            areaMaxContour = getAreaMaxContour(contours)  # 找到其中最大的轮廓
-            centerX = 0
-            centerY = 0
-
-            if areaMaxContour is not None:
-                ((centerX, centerY), rad) = cv2.minEnclosingCircle(areaMaxContour)  # 获得最小外接圆
-                # cv2.circle(orgFrame,(int(centerX), int(centerY)), int(rad), (255,0,0), 1)
-                centerX = leMap(centerX, 0.0, 320.0, 0.0, 640.0)  # 将数据从0-320 映射到 0-640
-                centerY = leMap(centerY, 0.0, 240.0, 0.0, 480.0)
-                rads.append(rad)  # 追加新的最小外接圆半径
-            else:
-                rads.append(0)  # 没找到球就追加0
-            rads = rads[1:]  # 将最久的一个数据去掉
-
-            ######根据图像计算距离##########
-            alr = 0
-            for r in rads:
-                alr = alr + r
-            alr = alr / 10  # 计算最近的10次的最小外接圆直径
-            lastR = lastR * 0.7 + alr * 0.3  # 简单滤波
-            count += 1
-            if count >= 5:  # 每5次更新一次距离
-                if lastR >= 2:  # 半径太小就直接让就距离为0, 0就是没有目标
-                    Dist = 40 * 47.0 / (lastR * 2)  # 40 是我们的目标小球的，47.0是我们我们的摄像头焦距
-                    Dist = Dist if Dist < 100 else 0  # 限制量程
-                else:
-                    Dist = 0
-                count = 0
-            ####################################
-
-            if areaMaxContour is not None:
-                yc = True
-                if centerX > 0:
-                    xc = True
-                else:
-                    xc = False
-
-                if centerY > 450:
-                    yaw = yaw + 40
-                elif centerY > 380:
-                    yaw = yaw + 25
-                elif centerY > 310:
-                    yaw = yaw + 15
-                elif centerY > 245:
-                    yaw = yaw + 2
-                elif centerY > 235:
-                    yc = False
-                elif centerY > 170:
-                    yaw = yaw - 2
-                elif centerY > 100:
-                    yaw = yaw - 15
-                elif centerY > 30:
-                    yaw = yaw - 25
-                elif centerY > 0:
-                    yaw = yaw - 40
-                else:
-                    yc = False
-
-
-            #            if yc is True:
-            #                yaw = yaw if yaw <= 2500 else 2500
-            #                yaw = yaw if yaw >= 500 else 500
-            #                lsc.MoveServo(20, yaw, 50)
-            else:
-                pass
+##        if orgFrame is not None:
+##            height, width = orgFrame.shape[:2]
+##            frame = orgFrame
+##            frame = cv2.GaussianBlur(frame, (5, 5), 0);  # 高斯模糊
+##            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV);  # 将图片转换到HSV空间
+##
+##            # 分离出各个HSV通道
+##            h, s, v = cv2.split(frame)
+##            v = cv2.equalizeHist(v)
+##            frame = cv2.merge((h, s, v))
+##
+##            frame = cv2.inRange(frame, (0,0,221), (180,30,255))  # 根据目标的颜色对图片进行二值化
+##            frame = cv2.morphologyEx(frame, cv2.MORPH_CLOSE, (4, 4))  # 闭操作
+##            (contours, hierarchy) = cv2.findContours(frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE, (0, 0))  # 找到所有的轮廓
+##            areaMaxContour = getAreaMaxContour(contours)  # 找到其中最大的轮廓
+##            centerX = 0
+##            centerY = 0
+##
+##            if areaMaxContour is not None:
+##                ((centerX, centerY), rad) = cv2.minEnclosingCircle(areaMaxContour)  # 获得最小外接圆
+##                # cv2.circle(orgFrame,(int(centerX), int(centerY)), int(rad), (255,0,0), 1)
+##                centerX = leMap(centerX, 0.0, 320.0, 0.0, 640.0)  # 将数据从0-320 映射到 0-640
+##                centerY = leMap(centerY, 0.0, 240.0, 0.0, 480.0)
+##                rads.append(rad)  # 追加新的最小外接圆半径
+##            else:
+##                rads.append(0)  # 没找到球就追加0
+##            rads = rads[1:]  # 将最久的一个数据去掉
+##
+###            ######根据图像计算距离##########
+###            alr = 0
+###            for r in rads:
+###                alr = alr + r
+###            alr = alr / 10  # 计算最近的10次的最小外接圆直径
+###            lastR = lastR * 0.7 + alr * 0.3  # 简单滤波
+###            count += 1
+###            if count >= 5:  # 每5次更新一次距离
+###                if lastR >= 2:  # 半径太小就直接让就距离为0, 0就是没有目标
+###                    Dist = 40 * 47.0 / (lastR * 2)  # 40 是我们的目标小球的，47.0是我们我们的摄像头焦距
+###                    Dist = Dist if Dist < 100 else 0  # 限制量程
+###                else:
+###                    Dist = 0
+###                count = 0
+###            ####################################
+##
+##            if areaMaxContour is not None:
+##                yc = True
+##                if centerX > 0:
+##                    xc = True
+##                else:
+##                    xc = False
+##
+##                if centerY > 450:
+##                    yaw = yaw + 40
+##                elif centerY > 380:
+##                    yaw = yaw + 25
+##                elif centerY > 310:
+##                    yaw = yaw + 15
+##                elif centerY > 245:
+##                    yaw = yaw + 2
+##                elif centerY > 235:
+##                    yc = False
+##                elif centerY > 170:
+##                    yaw = yaw - 2
+##                elif centerY > 100:
+##                    yaw = yaw - 15
+##                elif centerY > 30:
+##                    yaw = yaw - 25
+##                elif centerY > 0:
+##                    yaw = yaw - 40
+##                else:
+##                    yc = False
+##
+##
+##            #            if yc is True:
+##            #                yaw = yaw if yaw <= 2500 else 2500
+##            #                yaw = yaw if yaw >= 500 else 500
+##            #                lsc.MoveServo(20, yaw, 50)
+##            else:
+##                pass
 
     #        if cv2.waitKey(1) & 0xFF == ord('q'):
     #            break
