@@ -199,7 +199,7 @@ while True:
 ##                lsc.MoveServo(19, 500,1000)
 ##                lsc.WaitForFinish(20000)
 ##                lsc.MoveServo(19, 1500,1000)
-##                lsc.WaitForFinish(20000)time.sleep(0.1)
+##                lsc.WaitForFinish(20000)
 ##                step = 1
                 
                 #back or not?

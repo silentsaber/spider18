@@ -32,7 +32,8 @@ lsc = LSC_Client()
 ##lscx = LSC_Client.LSC_Client()  #摄像头
 
 
-stream = urllib.urlopen("http://127.0.0.1:8080/?action=stream?dummy=param.mjpg")
+strem = cv2.VideoCapture(0)
+##stream = urllib.urlopen("http://127.0.0.1:8080/?action=stream?dummy=param.mjpg")
 bytes = ''
 ##pic = 0
 ##start_time1 = 0
@@ -89,9 +90,8 @@ th2.start()
 lsc.RunActionGroup(0,1)
 pitch = 1500
 yaw = 1500
-lsc.MoveServo(19, 1500,1000)  #让摄像头云台的两个舵机都转动到中间位置
+lsc.MoveServo(19, 2500,1000)  #让摄像头云台的两个舵机都转动到中间位置
 lsc.MoveServo(20, 1500,1000)
-lsc.MoveServo(19, 2500,1000)  
 
 ##while True:
 ##  if Running is True:
@@ -155,11 +155,11 @@ def Pic():
     
     print('!')
     while True:
-            ###### camera code
             
+            ###### camera code
             orgFrame = None
             try:
-                bytes += stream.read(4096)  # 接收数据v
+                bytes += stream.read(4096)  # 接收数据
                 a = bytes.find('\xff\xd8')  # 找到帧头
                 b = bytes.find('\xff\xd9')  # 找到帧尾
                 if a != -1 and b != -1:
@@ -175,6 +175,7 @@ def Pic():
                 continue
 
             if orgFrame is not None:
+                print('found a frame')
                 frame = orgFrame
                 pil = Image.fromarray(frame.astype('uint8')).convert('RGB')  # 转numpy->PIL
                 width, height = pil.size
@@ -182,7 +183,8 @@ def Pic():
                 for barcode in barcodes:
                     barcodeData = barcode.data.decode('utf-8')
                     barcodeType = barcode.type
-##                    print("[info] Found {} barcode: {}".format(barcodeType, barcodeData))
+#                    print("[info] Found {} barcode: {}".format(barcodeType, barcodeData))
+                    print(barcodeData)
 
             ###### camera code
             time.sleep(0.1)
