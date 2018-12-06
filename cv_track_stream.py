@@ -13,7 +13,7 @@ import urllib
 import socket
 import signal
 import threading
-import LSC_Client
+import LSC_Clientz
 
 stream = None
 bytes = ''

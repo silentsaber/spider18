@@ -19,7 +19,7 @@ import Image
 from LSC_Client import LSC_Client
 
 import simple_barcode_detection
-import test_detect_v1 as detect_qr
+import test_detect_v2 as detect_qr
 
 
 
