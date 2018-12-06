@@ -44,6 +44,7 @@ global cX
 global cY
 global MaxArea
 def detect():
+    MaxArea=0
     # initialize the video stream and allow the camera sensor to warm up
     print("[INFO] starting video stream...")
     vs = VideoStream(src=0).start()
@@ -54,24 +55,34 @@ def detect():
     # barcodes found thus far
     csv = open(args["output"], "w")
     found = set()
+    ###
+    count = 0
+    runTime = 500
+    ###
+    while count <= runTime:
 
     # loop over the frames from the video stream
-    while True:
+    # while True:
         # grab the frame from the threaded video stream and resize it to
         # have a maximum width of 400 pixels
         frame = vs.read()
         frame = imutils.resize(frame, width=400)
 
-
         ########################################  find the center of white area
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        ret, binary = cv2.threshold(blurred, 180, 255, cv2.THRESH_BINARY)
-        _, contours, hierarchy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        ret, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+        (contours, hierarchy) = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         maxcounter = getAreaMaxContour(contours)  # 最大轮廓
-        M = cv2.moments(maxcounter)
-        cX = int(M["m10"] / M["m00"])
-        cY = int(M["m01"] / M["m00"])
+        
+        if maxcounter != None:
+#            print(MaxArea)
+            M = cv2.moments(maxcounter)
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            print(cX)
+            print("!")
+            print(cY)
         ########################################
 
         # find the barcodes in the frame and decode each of the barcodes
@@ -102,10 +113,18 @@ def detect():
                 csv.flush()
                 found.add(barcodeData)
 
-        # show the output frame
-        cv2.imshow("Barcode Scanner", frame)
-        key = cv2.waitKey(1) & 0xFF
 
+
+        # show the output frame
+        cv2.imshow("Barcode Scanner", gray)
+        key = cv2.waitKey(1) & 0xFF
+###
+        count += 1
+
+        # save every 16th frame
+        if count % 16 == 0:
+             cv2.imwrite("capture{0}.jpg".format(count), binary)
+###
         # if the `q` key was pressed, break from the loop
         if key == ord("q"):
             break
@@ -115,3 +134,4 @@ def detect():
     csv.close()
     cv2.destroyAllWindows()
     vs.stop()
+detect()
