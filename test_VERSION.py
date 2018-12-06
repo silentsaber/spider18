@@ -28,6 +28,10 @@ ip_port_sonar = ('127.0.0.1', 9030)
 sock_sonar = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock_sonar.connect(ip_port_sonar)  # 连接到超声波距离服务器以获取距离
 
+ip_port_sonarx = ('127.0.0.1', 9090)
+sock_sonarx = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock_sonarx.connect(ip_port_sonarx)  # 连接到超声波距离服务器以获取距离
+
 distance = 0.0
 step = -1
 Running = True
@@ -79,6 +83,34 @@ def updateDistance():
 th1 = threading.Thread(target=updateDistance)
 th1.setDaemon(True)
 th1.start()
+
+
+
+#################从服务器接收超声波距离的数据
+def updateDistancex():
+    global sock_sonar
+    global DISTANCE
+
+    while True:
+        rcv = sock_sonarx.recv(1024)
+        if rcv == b'':
+            DISTANCE = 0.0
+            break;
+        else:
+            if Running is True:
+                st = rcv.strip()  # 去除空格
+                try:
+                    DISTANCE = float(st)  # 将字符串转为浮点数
+                except Exception as e:
+                    print(e)
+                    DISTANCE = 0.0
+
+
+# 启动距离更新线程
+th10 = threading.Thread(target=updateDistancex)
+th10.setDaemon(True)
+th10.start()
+##################################
 
 
 # 心跳，
