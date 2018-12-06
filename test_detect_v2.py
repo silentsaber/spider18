@@ -27,7 +27,7 @@ def detect():
     # initialize the video stream and allow the camera sensor to warm up
     print("[INFO] starting video stream...")
     vs = VideoStream(src=0).start()
-#    vs = VideoStream(usePiCamera=True).start()
+#    vs = VideoStream(usePiCamera=True, resolution=(320, 240), framerate=16).start()
     time.sleep(2.0)
     
     # open the output CSV file for writing and initialize the set of
@@ -73,6 +73,7 @@ def detect():
         # show the output frame
     	cv2.imshow("Barcode Scanner", frame)
     	key = cv2.waitKey(1) & 0xFF
+        
      
     	# if the `q` key was pressed, break from the loop
     	if key == ord("q"):
@@ -83,4 +84,3 @@ def detect():
     csv.close()
     cv2.destroyAllWindows()
     vs.stop()
-    
